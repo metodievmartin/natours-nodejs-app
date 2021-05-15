@@ -24,6 +24,16 @@ exports.getAllTours = async (req, res) => {
             query = query.sort('-createdAt');
         }
 
+        // 3) Field limiting
+        if (req.query.fields) {
+            // Extracting all fields in one string
+            const fields = req.query.fields.split(',').join(' ');
+            query = query.select(fields);
+        } else {
+            // Default case - the entire doc is being sent without the '__v' field
+            query = query.select('-__v');
+        }
+
         // Execute the query
         const tours = await query;
 
