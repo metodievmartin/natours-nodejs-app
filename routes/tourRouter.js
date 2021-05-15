@@ -9,6 +9,8 @@ const {
 
 const router = express.Router();
 
+//router.param('id', checkID);
+
 router
     .route('/')
     .get(getAllTours)

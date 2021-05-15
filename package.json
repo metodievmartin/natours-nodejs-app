@@ -4,12 +4,15 @@
   "description": "NodeJS, Express and MongoDB",
   "main": "app.js",
   "scripts": {
-    "start": "nodemon server.js"
+    "start": "nodemon server.js",
+    "start prod": "NODE_ENV=production nodemon server.js"
   },
   "author": "Martin Metodiev",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^9.0.2",
     "express": "^4.17.1",
+    "mongoose": "^5.12.9",
     "morgan": "^1.10.0"
   },
   "devDependencies": {
