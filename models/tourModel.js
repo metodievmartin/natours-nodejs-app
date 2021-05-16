@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const slugify = require("slugify");
 
 const tourSchema = new mongoose.Schema({
     name: {
@@ -7,6 +8,7 @@ const tourSchema = new mongoose.Schema({
         unique: true,
         trim: true
     },
+    slug: String,
     duration: {
         type: Number,
         required: [true, 'A tour must have a duration']
@@ -50,7 +52,41 @@ const tourSchema = new mongoose.Schema({
         type: Date,
         default: Date.now()
     },
-    startDates: [Date]
+    startDates: [Date],
+    secretTour: {
+        type: Boolean,
+        default: false
+    }
+},{
+    toJSON: {virtuals: true},
+    toObject: {virtuals: true}
+});
+
+tourSchema.virtual('durationWeeks').get(function() {
+    return this.duration / 7;
+});
+
+// DOCUMENT MIDDLEWARE: runs before .save() and .create()
+tourSchema.pre('save', function(next) {
+    //'this' refers to the document that is to be saved
+    this.slug = slugify(this.name, {lower: true});
+    next();
+});
+
+// QUERY MIDDLEWARE
+// Using regex to match all the methods starting with 'find' (findOne(), findByID(), etc.)
+// otherwise it will run only for the .find() method
+tourSchema.pre(/^find/, function(next) {
+    //'this' refers to the query object
+    this.find({secretTour: {$ne: true}});
+    next();
+});
+
+// AGGREGATION MIDDLEWARE
+tourSchema.pre('aggregate', function(next) {
+   //'this' refers to the aggregation object
+    this.pipeline().unshift({$match: {secretTour: {$ne: true}}});
+    next();
 });
 
 module.exports = mongoose.model('Tour', tourSchema);
