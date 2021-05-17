@@ -31,9 +31,11 @@ const userSchema = new mongoose.Schema({
             },
             message: 'Password don\'t match'
         }
-    }
+    },
+    passwordChangedAt: Date
 });
 
+// User model middleware
 userSchema.pre('save', async function (next) {
     // Runs only when the password has been modified
     if (!this.isModified('password')) return next();
@@ -47,8 +49,23 @@ userSchema.pre('save', async function (next) {
     next();
 });
 
+// User model instance methods
 userSchema.methods.correctPassword = async function(candidatePassword, userPassword) {
     return await bcrypt.compare(candidatePassword, userPassword);
+};
+
+userSchema.methods.changedPasswordAfter = async function(JWTTimestamp) {
+    // This field will exist only if the password has ever been changed
+    if (this.passwordChangedAt) {
+        // Convert the date to the format used by JWT (timestamp in milliseconds)
+        const changedTimestamp = parseInt(this.passwordChangedAt.getTime() / 1000, 10);
+
+        // Returns true if the password has been changed after issuing the JWT
+        return JWTTimestamp < changedTimestamp;
+    }
+
+    // Default case - password never changed
+    return false;
 };
 
 module.exports = mongoose.model('User', userSchema);

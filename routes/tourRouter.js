@@ -1,4 +1,5 @@
 const express = require("express");
+const {protect} = require("../controllers/authController");
 const {
     getAllTours,
     aliasTopTours,
@@ -26,7 +27,7 @@ router
 
 router
     .route('/')
-    .get(getAllTours)
+    .get(protect, getAllTours)
     .post(createTour);
 
 router
