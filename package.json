@@ -5,9 +5,9 @@
   "main": "app.js",
   "scripts": {
     "start": "nodemon server.js",
-    "start:prod": "SET NODE_ENV=production & nodemon server.js",
+    "start:prod": "SET NODE_ENV=production&&nodemon server.js",
     "debug": "ndb server.js",
-    "debug:prod": "SET NODE_ENV=production & ndb server.js"
+    "debug:prod": "SET NODE_ENV=production&&ndb server.js"
   },
   "author": "Martin Metodiev",
   "license": "ISC",
@@ -15,6 +15,7 @@
     "bcrypt": "^5.0.1",
     "dotenv": "^9.0.2",
     "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.12.9",
     "morgan": "^1.10.0",
     "slugify": "^1.5.3",
