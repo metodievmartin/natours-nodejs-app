@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const mongoose = require('mongoose');
 const validator = require("validator");
 const bcrypt = require("bcrypt");
@@ -37,10 +38,14 @@ const userSchema = new mongoose.Schema({
             message: 'Password don\'t match'
         }
     },
-    passwordChangedAt: Date
+    passwordChangedAt: Date,
+    passwordResetToken: String,
+    passwordResetExpires: Date
 });
 
-// User model middleware
+// User model middleware----
+
+// Encrypts password before saving it
 userSchema.pre('save', async function (next) {
     // Runs only when the password has been modified
     if (!this.isModified('password')) return next();
@@ -54,7 +59,19 @@ userSchema.pre('save', async function (next) {
     next();
 });
 
-// User model instance methods
+// Updates passwordChangedAt property upon password changing
+userSchema.pre('save', function(next) {
+    // Runs only when the password has been modified excluding newly created docs
+    if (!this.isModified('password') || this.isNew) return next();
+
+    // Subtract 1 second to ensure the timestamp at passwordChangedAt
+    // will not be greater than the JWT's iat timestamp (the token may be issued before the data was saved)
+    this.passwordChangedAt = Date.now() - 1000;
+
+    next();
+});
+
+// User model instance methods----
 userSchema.methods.correctPassword = async function(candidatePassword, userPassword) {
     return await bcrypt.compare(candidatePassword, userPassword);
 };
@@ -71,6 +88,20 @@ userSchema.methods.changedPasswordAfter = async function(JWTTimestamp) {
 
     // Default case - password never changed
     return false;
+};
+
+userSchema.methods.createPasswordResetToken = function() {
+  const resetToken = crypto.randomBytes(32).toString('hex');
+
+  this.passwordResetToken = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+
+  // Set the token expiration to 10 minutes
+  this.passwordResetExpires = Date.now() + (10 * 60 * 1000);
+
+  return resetToken;
 };
 
 module.exports = mongoose.model('User', userSchema);
