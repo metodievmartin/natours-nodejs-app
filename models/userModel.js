@@ -40,7 +40,12 @@ const userSchema = new mongoose.Schema({
     },
     passwordChangedAt: Date,
     passwordResetToken: String,
-    passwordResetExpires: Date
+    passwordResetExpires: Date,
+    active: {
+        type: Boolean,
+        default: true,
+        select: false
+    }
 });
 
 // User model middleware----
@@ -69,6 +74,13 @@ userSchema.pre('save', function(next) {
     this.passwordChangedAt = Date.now() - 1000;
 
     next();
+});
+
+// Adds filtration to each query starting with 'find' to only show the active users (not deleted ones)
+userSchema.pre(/^find/, function(next){
+   // this points out to the current query
+   this.find({ active: true });
+   next()
 });
 
 // User model instance methods----
