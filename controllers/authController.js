@@ -15,6 +15,22 @@ const signToken = id => {
 const createSendToken = (user, statusCode, res) => {
     const token = signToken(user._id);
 
+    // Get from the config file & convert the JWT expiration time from days to milliseconds
+    const tokenExpirationDate = Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000;
+
+    const cookieOptions = {
+        expires: new Date(tokenExpirationDate),
+        httpOnly: true
+    }
+
+    if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+
+    res.cookie('jwt', token, cookieOptions);
+
+    // Set values to undefined so that they are not displayed in the response
+    user.password = undefined;
+    user.active = undefined;
+
     res.status(statusCode).json({
         status: 'success',
         token,
@@ -123,8 +139,8 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
 
     const message = 'Forgot your password?\n' +
-    `Submit a PATCH request with your new password and PasswordConfirm to: ${resetURL}\n` +
-    'If you didn\'t forget your password, please ignore this email!';
+        `Submit a PATCH request with your new password and PasswordConfirm to: ${resetURL}\n` +
+        'If you didn\'t forget your password, please ignore this email!';
 
     try {
         await sendEmail({
@@ -141,7 +157,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
         // Reset the token in case of an error
         user.passwordResetToken = undefined;
         user.passwordResetExpires = undefined;
-        await user.save({ validateBeforeSave: false });
+        await user.save({validateBeforeSave: false});
 
         return next(
             new AppError('There was an error sending the email. Try again later!', 500)
@@ -160,7 +176,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
     // Query the user by the token & check if has not expired
     const user = await User.findOne({
         passwordResetToken: hashedToken,
-        passwordResetExpires: { $gt: Date.now() }
+        passwordResetExpires: {$gt: Date.now()}
     });
 
     // 2) If token has not expired and there is user, set the new password
@@ -180,7 +196,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 
     // 3) Update passwordChangedAt property for that user
 
-        // Via middleware function on the userModel
+    // Via middleware function on the userModel
 
     // 4) Log the user in, send JWT
     createSendToken(user, 200, res);
