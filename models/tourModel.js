@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const slugify = require("slugify");
-const validator = require("validator");
 
 const tourSchema = new mongoose.Schema({
     name: {
@@ -76,36 +75,94 @@ const tourSchema = new mongoose.Schema({
     secretTour: {
         type: Boolean,
         default: false
-    }
+    },
+    startLocation: {
+        // GeoJSON
+        type: {
+            type: String,
+            default: 'Point',
+            enum: ['Point']
+        },
+        coordinates: [Number],
+        address: String,
+        description: String
+    },
+    locations: [
+        {
+            type: {
+                type: String,
+                default: 'Point',
+                enum: ['Point']
+            },
+            coordinates: [Number],
+            address: String,
+            description: String,
+            day: Number
+        }
+    ],
+    guides: [
+        {
+            type: mongoose.Schema.ObjectId,
+            ref: 'User'
+        }
+    ]
 },{
-    toJSON: {virtuals: true},
-    toObject: {virtuals: true}
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
 });
 
+// Create a virtual field 'durationWeeks' displayed only in the response
 tourSchema.virtual('durationWeeks').get(function() {
     return this.duration / 7;
 });
 
-// DOCUMENT MIDDLEWARE: runs before .save() and .create() /won't work on update doc/
+// -- DOCUMENT MIDDLEWARE --
+// runs before .save() and .create() /won't work on update doc/
+
+// Create a slug based on the name of the tour - ("The Sea Explorer" -> "the-sea-explorer")
 tourSchema.pre('save', function(next) {
     //'this' refers to the document that is to be saved
-    this.slug = slugify(this.name, {lower: true});
+    this.slug = slugify(this.name, { lower: true });
+
     next();
 });
 
-// QUERY MIDDLEWARE
+// -- QUERY MIDDLEWARE --
 // Using regex to match all the methods starting with 'find' (findOne(), findByID(), etc.)
 // otherwise it will run only for the .find() method
+
+// Filter out the secret tours
 tourSchema.pre(/^find/, function(next) {
     //'this' refers to the query object
-    this.find({secretTour: {$ne: true}});
+    this.find({ secretTour: { $eq: false } });
+
     next();
 });
 
-// AGGREGATION MIDDLEWARE
+// Populate the 'guides' field with the user data on each request, querying by the stored user id references
+tourSchema.pre(/^find/, function(next) {
+    this.populate({
+        path: 'guides',
+        select: '-__v -passwordChangedAt'
+    });
+
+    next();
+})
+
+/*
+Middleware to embed the users into the tour document
+tourSchema.pre('save', async function(next) {
+    const guidesPromises = this.guides.map(async id => await User.findById(id));
+    this.guides = await Promise.all(guidesPromises);
+    next();
+});
+*/
+
+// -- AGGREGATION MIDDLEWARE --
 tourSchema.pre('aggregate', function(next) {
    //'this' refers to the aggregation object
-    this.pipeline().unshift({$match: {secretTour: {$ne: true}}});
+    this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+
     next();
 });
 
