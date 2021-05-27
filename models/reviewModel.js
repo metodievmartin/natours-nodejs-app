@@ -29,4 +29,29 @@ const reviewSchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
+// -- QUERY MIDDLEWARE --
+// Using regex to match all the methods starting with 'find' (findOne(), findByID(), etc.)
+// otherwise it will run only for the .find() method
+
+// Populate the 'tour' & 'user' fields with the selected data on each request,
+// querying by the stored 'tour' & 'user' id references
+reviewSchema.pre(/^find/, function(next) {
+    /*
+    this.populate({
+            path: 'tour',
+            select: 'name'
+        }).populate({
+            path: 'user',
+            select: 'name photo'
+        });
+        */
+
+    this.populate({
+        path: 'user',
+        select: 'name photo'
+    });
+
+    next()
+});
+
 module.exports = mongoose.model('Review', reviewSchema);
