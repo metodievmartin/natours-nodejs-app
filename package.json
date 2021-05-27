@@ -15,6 +15,7 @@
     "bcrypt": "^5.0.1",
     "dotenv": "^9.0.2",
     "express": "^4.17.1",
+    "express-mongo-sanitize": "^2.1.0",
     "express-rate-limit": "^5.2.6",
     "express-sanitize": "^1.0.1",
     "helmet": "^4.6.0",
