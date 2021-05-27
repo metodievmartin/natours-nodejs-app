@@ -111,9 +111,19 @@ const tourSchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
+// -- VIRTUAL FIELDS --
+
 // Create a virtual field 'durationWeeks' displayed only in the response
 tourSchema.virtual('durationWeeks').get(function() {
     return this.duration / 7;
+});
+
+// Create virtual field 'reviews' and populate it with all the reviews from the 'Review' schema
+// that are parent referencing to the current tour
+tourSchema.virtual('reviews', {
+    ref: 'Review',
+    foreignField: 'tour',
+    localField: '_id'
 });
 
 // -- DOCUMENT MIDDLEWARE --
