@@ -1,19 +1,16 @@
 const AppError = require("../utils/AppError");
 const catchAsync = require("../utils/catchAsync");
 
-// Factory function that returns a generic handler to delete a single document
-exports.deleteOne = Model =>
+// Factory function that returns a generic handler to create a single document
+exports.createOne = Model =>
     catchAsync(async (req, res, next) => {
-        const docID = req.params.id;
-        const doc = await Model.findByIdAndDelete(docID);
+        const newDoc = await Model.create(req.body);
 
-        if (!doc) {
-            return next(new AppError('No document found with this ID', 404));
-        }
-
-        res.status(204).json({
+        res.status(201).json({
             status: 'success',
-            data: null
+            data: {
+                data: newDoc
+            }
         });
     });
 
@@ -37,5 +34,21 @@ exports.updateOne = Model =>
             data: {
                 data: doc
             }
+        });
+    });
+
+// Factory function that returns a generic handler to delete a single document
+exports.deleteOne = Model =>
+    catchAsync(async (req, res, next) => {
+        const docID = req.params.id;
+        const doc = await Model.findByIdAndDelete(docID);
+
+        if (!doc) {
+            return next(new AppError('No document found with this ID', 404));
+        }
+
+        res.status(204).json({
+            status: 'success',
+            data: null
         });
     });
