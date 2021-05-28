@@ -1,6 +1,7 @@
 const User = require('./../models/userModel');
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require("../utils/AppError");
+const { deleteOne } = require("./handlerFactory");
 
 exports.getAllUsers = catchAsync(async (req, res, next) => {
     const users = await User.find();
@@ -32,7 +33,7 @@ exports.updateMe = catchAsync(async (req, res, next) => {
         );
     }
 
-    // 2) Filtered out unwanted field names that are not allowed to be updated
+    // 2) Filter out unwanted field names that are not allowed to be updated
     const filteredBody = filterObj(req.body, 'name', 'email');
 
     // 3) Update user document
@@ -79,9 +80,4 @@ exports.updateUser = (req, res) => {
     });
 };
 
-exports.deleteUser = (req, res) => {
-    res.status(500).json({
-        status: 'error',
-        message: 'This route is not defined yet'
-    });
-};
+exports.deleteUser = deleteOne(User);
