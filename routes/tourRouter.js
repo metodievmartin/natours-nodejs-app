@@ -1,5 +1,6 @@
 const express = require("express");
-const {protect, restrictTo} = require("../controllers/authController");
+const reviewRouter = require("../routes/reviewRouter");
+const { protect, restrictTo } = require("../controllers/authController");
 const {
     getAllTours,
     aliasTopTours,
@@ -12,6 +13,9 @@ const {
 } = require('./../controllers/tourControler');
 
 const router = express.Router();
+
+// Use middleware to create a nested route for the reviews
+router.use('/:tourId/reviews', reviewRouter);
 
 router
     .route('/top-5-cheap')
