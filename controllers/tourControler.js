@@ -2,7 +2,7 @@ const Tour = require('./../models/tourModel');
 const APIFeatures = require("../utils/apiFeatures");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/AppError");
-const { deleteOne, updateOne } = require("./handlerFactory");
+const { createOne, updateOne, deleteOne } = require("./handlerFactory");
 
 // Middleware to manipulate the query string for a predefined route '/top-5-cheap'
 exports.aliasTopTours = (req, res, next) => {
@@ -52,16 +52,7 @@ exports.getTour = catchAsync(async (req, res, next) => {
     });
 });
 
-exports.createTour = catchAsync(async (req, res, next) => {
-    const newTour = await Tour.create(req.body);
-
-    res.status(201).json({
-        status: 'success',
-        data: {
-            tour: newTour
-        }
-    });
-});
+exports.createTour = createOne(Tour);
 
 exports.updateTour = updateOne(Tour);
 

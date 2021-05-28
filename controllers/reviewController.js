@@ -1,6 +1,6 @@
 const Review = require('./../models/reviewModel');
 const catchAsync = require('./../utils/catchAsync');
-const { updateOne, deleteOne } = require("./handlerFactory");
+const { createOne, updateOne, deleteOne } = require("./handlerFactory");
 
 exports.getAllReviews = catchAsync(async (req, res, next) => {
     let filter = {};
@@ -17,20 +17,17 @@ exports.getAllReviews = catchAsync(async (req, res, next) => {
     });
 });
 
-exports.createReview = catchAsync(async (req, res, next) => {
-    // Allow nested routes - for it handles '/api/v1/reviews' & '/api/v1/tours/:tourId/reviews' routes
+// A middleware that ensures 'tour ID' and 'user ID' are being added to req.body
+// thus allows nested routes and could handle calls from both '/api/v1/reviews' & '/api/v1/tours/:tourId/reviews'
+exports.setTourAndUserIds = (req, res, next) => {
     if (!req.body.tour) req.body.tour = req.params.tourId;
     if (!req.body.user) req.body.user = req.user.id;
 
-   const newReview = await Review.create(req.body);
+    next();
+};
 
-   res.status(201).json({
-       status: 'success',
-       data: {
-           review: newReview
-       }
-   });
-});
+exports.createReview = createOne(Review);
 
 exports.updateReview = updateOne(Review);
+
 exports.deleteReview = deleteOne(Review);
