@@ -2,7 +2,7 @@ const Tour = require('./../models/tourModel');
 const APIFeatures = require("../utils/apiFeatures");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/AppError");
-const {deleteOne} = require("./handlerFactory");
+const { deleteOne, updateOne } = require("./handlerFactory");
 
 // Middleware to manipulate the query string for a predefined route '/top-5-cheap'
 exports.aliasTopTours = (req, res, next) => {
@@ -63,26 +63,7 @@ exports.createTour = catchAsync(async (req, res, next) => {
     });
 });
 
-exports.updateTour = catchAsync(async (req, res, next) => {
-    const tourID = req.params.id;
-
-    const tour = await Tour.findByIdAndUpdate(tourID, req.body, {
-        new: true,
-        runValidators: true,
-        useFindAndModify: false
-    });
-
-    if (!tour) {
-        return next(new AppError('No tour found with this ID', 404));
-    }
-
-    res.status(200).json({
-        status: 'success',
-        data: {
-            tour
-        }
-    });
-});
+exports.updateTour = updateOne(Tour);
 
 exports.deleteTour = deleteOne(Tour);
 
