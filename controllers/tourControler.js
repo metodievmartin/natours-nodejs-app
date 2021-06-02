@@ -1,38 +1,14 @@
 const Tour = require('./../models/tourModel');
-const APIFeatures = require("../utils/apiFeatures");
 const catchAsync = require("../utils/catchAsync");
-const AppError = require("../utils/AppError");
-const { createOne, updateOne, getOne, deleteOne } = require("./handlerFactory");
+const {
+    getAll,
+    createOne,
+    updateOne,
+    getOne,
+    deleteOne
+} = require("./handlerFactory");
 
-// Middleware to manipulate the query string for a predefined route '/top-5-cheap'
-exports.aliasTopTours = (req, res, next) => {
-    req.query.limit = '5';
-    req.query.sort = '-ratingsAverage,price';
-    req.query.fields = 'name,price,ratingsAverage,summary,difficulty';
-    next()
-};
-
-exports.getAllTours = catchAsync(async (req, res, next) => {
-    // Build the query
-    const features = new APIFeatures(Tour.find(), req.query);
-    features
-        .filter()
-        .sort()
-        .limitFields()
-        .paginate();
-
-    // Execute the query
-    const tours = await features.query;
-
-    // Send response
-    res.status(200).json({
-        status: 'success',
-        results: tours.length,
-        data: {
-            tours
-        }
-    });
-});
+exports.getAllTours = getAll(Tour);
 
 exports.getTour = getOne(Tour, { path: 'reviews' })
 
@@ -41,6 +17,14 @@ exports.createTour = createOne(Tour);
 exports.updateTour = updateOne(Tour);
 
 exports.deleteTour = deleteOne(Tour);
+
+// Middleware to manipulate the query string for a predefined route '/top-5-cheap'
+exports.aliasTopTours = (req, res, next) => {
+    req.query.limit = '5';
+    req.query.sort = '-ratingsAverage,price';
+    req.query.fields = 'name,price,ratingsAverage,summary,difficulty';
+    next()
+};
 
 exports.getTourStats = catchAsync(async (req, res, next) => {
     const stats = await Tour.aggregate([
