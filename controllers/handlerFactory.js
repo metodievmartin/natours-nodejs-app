@@ -1,5 +1,6 @@
 const AppError = require("../utils/AppError");
 const catchAsync = require("../utils/catchAsync");
+const APIFeatures = require("../utils/apiFeatures");
 
 // Factory function that returns a generic handler to create a single document
 exports.createOne = Model =>
@@ -54,6 +55,8 @@ exports.deleteOne = Model =>
     });
 
 // Factory function that returns a generic handler to fetch a single document
+// -can accept options object specifying the fields to be populated
+// -object structure example { path: 'reviews', select?: 'name' }
 exports.getOne = (Model, populateOptions) =>
     catchAsync(async (req, res, next) => {
         const docID = req.params.id;
@@ -71,6 +74,34 @@ exports.getOne = (Model, populateOptions) =>
             status: 'success',
             data: {
                 data: doc
+            }
+        });
+    });
+
+// Factory function that returns a generic handler to fetch all document from given collection
+exports.getAll = (Model) =>
+    catchAsync(async (req, res, next) => {
+        // To allow nested GET reviews on tour
+        let filter = {};
+        if (req.params.tourId) filter = { tour: req.params.tourId};
+
+        // Build the query
+        const features = new APIFeatures(Model.find(filter), req.query);
+        features
+            .filter()
+            .sort()
+            .limitFields()
+            .paginate();
+
+        // Execute the query
+        const docs = await features.query;
+
+        // Send response
+        res.status(200).json({
+            status: 'success',
+            results: docs.length,
+            data: {
+                data: docs
             }
         });
     });
