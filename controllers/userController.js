@@ -1,7 +1,7 @@
 const User = require('./../models/userModel');
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require("../utils/AppError");
-const { updateOne, deleteOne } = require("./handlerFactory");
+const { updateOne, getOne, deleteOne } = require("./handlerFactory");
 
 exports.getAllUsers = catchAsync(async (req, res, next) => {
     const users = await User.find();
@@ -62,16 +62,11 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
 exports.createUser = (req, res) => {
     res.status(500).json({
         status: 'error',
-        message: 'This route is not defined yet'
+        message: 'This route is not defined! Please use /signup instead'
     });
 };
 
-exports.getUser = (req, res) => {
-    res.status(500).json({
-        status: 'error',
-        message: 'This route is not defined yet'
-    });
-};
+exports.getUser = getOne(User);
 
 // Do NOT update passwords with this - use the dedicated authController handler
 exports.updateUser = updateOne(User);
