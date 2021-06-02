@@ -52,3 +52,25 @@ exports.deleteOne = Model =>
             data: null
         });
     });
+
+// Factory function that returns a generic handler to fetch a single document
+exports.getOne = (Model, populateOptions) =>
+    catchAsync(async (req, res, next) => {
+        const docID = req.params.id;
+        let query = Model.findById(docID);
+
+        if (populateOptions) query = query.populate(populateOptions);
+
+        const doc = await query;
+
+        if (!doc) {
+            return next(new AppError('No document found with this ID', 404));
+        }
+
+        res.status(200).json({
+            status: 'success',
+            data: {
+                data: doc
+            }
+        });
+    });
