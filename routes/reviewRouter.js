@@ -1,6 +1,6 @@
 const express = require('express');
 
-const {protect, restrictTo} = require("../controllers/authController");
+const { protect, restrictTo } = require("../controllers/authController");
 const {
     getAllReviews,
     setTourAndUserIds,
@@ -10,19 +10,21 @@ const {
     deleteReview
 } = require('./../controllers/reviewController');
 
+// '/api/v1/reviews' & '/api/v1/tours/:tourId/reviews' (nested route)
 // Create the router with the mergeParams option
 // so that it will have access to the req.params coming from mounted/nested routers
-const router = express.Router({mergeParams: true})
+const router = express.Router({ mergeParams: true })
 
-router
-    .route('/')
+// Use the protect middleware here to auth guard all of the routes below
+router.use(protect);
+
+router.route('/')
     .get(getAllReviews)
-    .post(protect, restrictTo('user'), setTourAndUserIds, createReview);
+    .post(restrictTo('user'), setTourAndUserIds, createReview);
 
-router
-    .route('/:id')
+router.route('/:id')
     .get(getReview)
-    .patch(updateReview)
-    .delete(deleteReview);
+    .patch(restrictTo('user', 'admin'), updateReview)
+    .delete(restrictTo('user', 'admin'), deleteReview);
 
 module.exports = router;

@@ -5,6 +5,7 @@ const {
     forgotPassword,
     resetPassword,
     protect,
+    restrictTo,
     updatePassword
 } = require("../controllers/authController");
 const {
@@ -18,29 +19,36 @@ const {
     deleteMe
 } = require("../controllers/userController");
 
+// '/api/v1/users'
 const router = express.Router();
 
-// Authorization actions endpoints
+// Authorization actions endpoints - access by everyone
 router.post('/signup', signup);
 router.post('/login', login);
 
-// Password actions endpoints
+// Password actions endpoints - access by everyone
 router.post('/forgotPassword', forgotPassword);
 router.patch('/resetPassword/:token', resetPassword);
+// - access by logged users
 router.patch( '/updateMyPassword', protect, updatePassword);
 
-// Current user actions endpoints
-router.get('/me', protect, getMe, getUser);
-router.patch( '/updateMe', protect, updateMe);
-router.delete( '/deleteMe', protect, deleteMe);
+// Use the protect middleware here to auth guard all of the routes below
+router.use(protect);
 
-router
-    .route('/')
+// Current user actions endpoints - access by logged users
+router.get('/me', getMe, getUser);
+router.patch( '/updateMe', updateMe);
+router.delete( '/deleteMe', deleteMe);
+
+// Use middleware here to restrict the access by role to all of the routes below
+router.use(restrictTo('admin'));
+
+// Users CRUD actions - access by logged admin users only
+router.route('/')
     .get(getAllUsers)
     .post(createUser);
 
-router
-    .route('/:id')
+router.route('/:id')
     .get(getUser)
     .patch(updateUser)
     .delete(deleteUser);
