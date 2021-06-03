@@ -7,19 +7,10 @@ exports.getAllUsers = getAll(User);
 
 exports.getUser = getOne(User);
 
-// Do NOT update passwords with this - use the dedicated authController handler
+// Do NOT update passwords with this - use the dedicated authController handler (updatePassword)
 exports.updateUser = updateOne(User);
 
 exports.deleteUser = deleteOne(User);
-
-const filterObj = (obj, ...allowedFields) => {
-    const newObj = {};
-    Object.keys(obj).forEach(el => {
-       if (allowedFields.includes(el)) newObj[el] = obj[el];
-    });
-
-    return newObj;
-};
 
 exports.updateMe = catchAsync(async (req, res, next) => {
     // 1) Create error if user POSTs password data
@@ -60,5 +51,20 @@ exports.createUser = (req, res) => {
         status: 'error',
         message: 'This route is not defined! Please use /signup instead'
     });
+};
+
+// Middleware that sets the current user ID to req.params so that the current user can be fetched using the factory handler
+exports.getMe = (req, res, next) => {
+    req.params.id = req.user.id;
+    next();
+};
+
+const filterObj = (obj, ...allowedFields) => {
+    const newObj = {};
+    Object.keys(obj).forEach(el => {
+        if (allowedFields.includes(el)) newObj[el] = obj[el];
+    });
+
+    return newObj;
 };
 
