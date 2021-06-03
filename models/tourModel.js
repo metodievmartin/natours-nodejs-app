@@ -126,6 +126,14 @@ tourSchema.virtual('reviews', {
     localField: '_id'
 });
 
+// -- SCHEMA INDEXES --
+
+// Compound index of the price in ASC & the averageRating in DESC order
+tourSchema.index({ price: 1, averageRating: -1 });
+
+// Index of the tour slug in ASC
+tourSchema.index({ slug: 1 });
+
 // -- DOCUMENT MIDDLEWARE --
 // runs before .save() and .create() /won't work on update doc/
 
