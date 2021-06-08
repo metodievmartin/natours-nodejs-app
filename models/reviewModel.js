@@ -31,6 +31,12 @@ const reviewSchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
+// -- SCHEMA INDEXES --
+
+// Creates a compound index of the tourID & userID and set the combination to unique
+// in order prevent duplicate reviews (one review by user per tour allowed)
+reviewSchema.index({ tour: 1, user: 1 }, { unique: true });
+
 // -- STATIC METHODS --
 
 // Calculates the average rating & the reviews count for a provided tour and updates in the DB
