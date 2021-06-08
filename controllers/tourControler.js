@@ -1,5 +1,6 @@
 const Tour = require('./../models/tourModel');
 const catchAsync = require("../utils/catchAsync");
+const AppError = require("../utils/AppError");
 const {
     getAll,
     createOne,
@@ -97,4 +98,34 @@ exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
         }
     });
 });
+
+exports.getToursWithin = async (req, res, next) => {
+    const {distance, latlng, unit} = req.params;
+    const [lat, lng] = latlng.split(',');
+
+    if (!lat || !lng) {
+        next(
+            new AppError('Please provide latitude and longitude in the correct format (lat,lng).', 400)
+        );
+    }
+
+    // Calculates the radiance by dividing the distance by the Earth's radius in miles or kilometers respectively
+    const radius = unit === 'mi' ? distance / 3963.2 : distance / 6378.1;
+
+    // Filters the tours that fall within the provided radius from the provided coordinates
+    // based on each tour's start location using the geospatial operators
+    const tours = await Tour.find({
+        startLocation: {
+            $geoWithin: { $centerSphere: [[lng, lat], radius] }
+        }
+    });
+
+    res.status(200).json({
+        status: 'success',
+        results: tours.length,
+        data: {
+            data: tours
+        }
+    });
+};
 

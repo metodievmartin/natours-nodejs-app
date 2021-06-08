@@ -136,6 +136,10 @@ tourSchema.index({ price: 1, averageRating: -1 });
 // Index of the tour slug in ASC
 tourSchema.index({ slug: 1 });
 
+// Index of GeoJSON obj using geospatial index type '2dsphere' - which
+// supports queries that calculate geometries on an earth-like sphere.
+tourSchema.index({ startLocation: '2dsphere' })
+
 // -- DOCUMENT MIDDLEWARE --
 // runs before .save() and .create() /won't work on update doc/
 
