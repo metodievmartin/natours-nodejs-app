@@ -99,7 +99,7 @@ exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
     });
 });
 
-exports.getToursWithin = async (req, res, next) => {
+exports.getToursWithin = catchAsync(async (req, res, next) => {
     const {distance, latlng, unit} = req.params;
     const [lat, lng] = latlng.split(',');
 
@@ -127,5 +127,51 @@ exports.getToursWithin = async (req, res, next) => {
             data: tours
         }
     });
-};
+});
+
+exports.getDistances = catchAsync(async (req, res, next) => {
+    const {latlng, unit} = req.params;
+    const [lat, lng] = latlng.split(',');
+
+    if (!lat || !lng) {
+        next(
+            new AppError('Please provide latitude and longitude in the correct format (lat,lng).', 400)
+        );
+    }
+
+    // Create a multiplier based on the unit in order to convert the value from meters to the desired unit
+    const multiplier = unit === 'mi' ? 0.000621371 : 0.001;
+
+/*
+    $geoNear must be at the first stage and needs at least one geospatial index ('2dsphere') in order to work
+    'near' - GeoJSON object which to calculate the distances from - calculates between this point and all the startLocations
+    'distanceField' - sets the name of the field where all the distances will be stored
+    'distanceMultiplier' - optional multiplier to be applied on the distance value since it's returned in meters by default
+*/
+    const distances = await Tour.aggregate([
+        {
+            $geoNear: {
+                near: {
+                    type: 'Point',
+                    coordinates: [Number(lng), Number(lng)]
+                },
+                distanceField: 'distance',
+                distanceMultiplier: multiplier
+            }
+        },
+        {
+            $project: {
+                distance: 1,
+                name: 1
+            }
+        }
+    ]);
+
+    res.status(200).json({
+        status: 'success',
+        data: {
+            data: distances
+        }
+    });
+});
 

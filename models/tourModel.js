@@ -138,7 +138,7 @@ tourSchema.index({ slug: 1 });
 
 // Index of GeoJSON obj using geospatial index type '2dsphere' - which
 // supports queries that calculate geometries on an earth-like sphere.
-tourSchema.index({ startLocation: '2dsphere' })
+tourSchema.index({ startLocation: '2dsphere' });
 
 // -- DOCUMENT MIDDLEWARE --
 // runs before .save() and .create() /won't work on update doc/
@@ -183,11 +183,11 @@ tourSchema.pre('save', async function(next) {
 */
 
 // -- AGGREGATION MIDDLEWARE --
-tourSchema.pre('aggregate', function(next) {
+/*tourSchema.pre('aggregate', function(next) {
    //'this' refers to the aggregation object
     this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
 
     next();
-});
+});*/
 
 module.exports = mongoose.model('Tour', tourSchema);
