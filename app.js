@@ -67,7 +67,8 @@ app.use(hpp({
 // --ROUTES--
 
 // View routes
-app.use('/', viewRouter)
+app.use('/', viewRouter);
+
 // API routes
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
