@@ -117,11 +117,13 @@ exports.protect = async (req, res, next) => {
 
     // 5) Add current user's details to the request body
     req.user = fetchedUser;
+    res.locals.user = fetchedUser;
 
     // 6) Grant access to the protected route
     next();
 };
 
+// Middleware that checks if there's a valid logged user and decorates the res.locals object with 'user' property
 exports.isLoggedIn = async (req, res, next) => {
     try {
         if (req.cookies.jwt) {
