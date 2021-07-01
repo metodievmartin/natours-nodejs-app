@@ -71,11 +71,22 @@ exports.login = catchAsync(async (req, res, next) => {
     createSendToken(user, 200, res);
 });
 
-exports.protect = catchAsync(async (req, res, next) => {
+exports.logout = (req, res) => {
+  res.cookie('jwt', 'loggedout', {
+      expires: new Date(Date.now() + 10 * 1000),
+      httpOnly: true
+  });
+
+  res.status(200).json({ status: 'success' });
+};
+
+exports.protect = async (req, res, next) => {
     // 1) Check if there's a token
     let token;
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         token = req.headers.authorization.split(' ')[1];
+    } else if (req.cookies.jwt) {
+        token = req.cookies.jwt;
     }
 
     if (!token) {
@@ -109,7 +120,36 @@ exports.protect = catchAsync(async (req, res, next) => {
 
     // 6) Grant access to the protected route
     next();
-});
+};
+
+exports.isLoggedIn = async (req, res, next) => {
+    try {
+        if (req.cookies.jwt) {
+            // 1) Verify token
+            const decoded = await promisify(jwt.verify)(req.cookies.jwt, process.env.JWT_SECRET);
+
+            // 2) Check if user still exists
+            const currentUser = await User.findById(decoded.id);
+
+            if (!currentUser) {
+                return next();
+            }
+
+            // 3) Check if user changed password after token was issued
+            const isPasswordChangedAfter = await currentUser.changedPasswordAfter(decoded.iat);
+            if (isPasswordChangedAfter) {
+                return next();
+            }
+
+            // 4) Finally add current user's details to the res.locals object so that will be available to all templates
+            res.locals.user = currentUser;
+            return next();
+        }
+    } catch (err) {
+        return next();
+    }
+    next();
+};
 
 // Receives the roles that have permission to access the resource
 // *Must be called only after the "protect" middleware func for it needs current user details

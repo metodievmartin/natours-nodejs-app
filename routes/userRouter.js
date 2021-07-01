@@ -6,7 +6,8 @@ const {
     resetPassword,
     protect,
     restrictTo,
-    updatePassword
+    updatePassword,
+    logout
 } = require("../controllers/authController");
 const {
     createUser,
@@ -25,6 +26,7 @@ const router = express.Router();
 // Authorization actions endpoints - access by everyone
 router.post('/signup', signup);
 router.post('/login', login);
+router.get('/logout', logout);
 
 // Password actions endpoints - access by everyone
 router.post('/forgotPassword', forgotPassword);
