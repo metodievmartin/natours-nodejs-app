@@ -249,19 +249,30 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
     const user = await User.findById(req.user.id).select('+password');
 
     // 2) Check if the POSTed current password is correct
-    if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
+    const passwordCurrent = req.body.passwordCurrent;
+
+    if (!(await user.correctPassword(passwordCurrent, user.password))) {
         return next(
             new AppError('Your current password is incorrect.', 401)
         );
     }
 
+    // 3) Check if POSTed new passwords match
+    const password = req.body.password;
+    const passwordConfirm = req.body.passwordConfirm;
 
-    // 3) If correct, update password
-    user.password = req.body.password;
-    user.passwordConfirm = req.body.passwordConfirm;
+    if (password !== passwordConfirm) {
+        return next(
+            new AppError('Passwords do not match.', 400)
+        );
+    }
+
+    // 4) If correct, update password
+    user.password = password
+    user.passwordConfirm = passwordConfirm;
 
     await user.save();
 
-    // 4) Log user in, send JWT
+    // 5) Log user in, send JWT
     createSendToken(user, 200, res);
 });
