@@ -43,22 +43,22 @@ const upload = multer({
 
 exports.uploadUserPhoto = upload.single('photo');
 
-exports.resizeUserPhoto = (req, res, next) => {
+exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
     // Move on if no upload
     if (!req.file) return next();
 
     // Set file name to req.file.filename for it's needed in updateMe()
-    //   Format: user-{user._id}-{timestamp} => user-j7dhfsdj334434df-123243434.jpeg
+    //   Format: user-{user._id}-{timestamp} => user-j7defs334434df-123243434.jpeg
     req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
 
     // Image processing - resize, format and save uploaded image
-    sharp(req.file.buffer)
+    await sharp(req.file.buffer)
         .resize(500, 500)
         .toFormat('jpeg', { quality: 90 })
         .toFile(`public/img/users/${req.file.filename}`);
 
     next();
-};
+});
 
 exports.getAllUsers = getAll(User);
 
