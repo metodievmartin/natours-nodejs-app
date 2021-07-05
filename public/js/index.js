@@ -37,10 +37,12 @@ if (userDataForm) {
         saveBtn.textContent = 'Updating...';
         saveBtn.disabled = true;
 
-        const name = document.getElementById('name').value;
-        const email = document.getElementById('email').value;
+        const form = new FormData();
+        form.append('name', document.getElementById('name').value)
+        form.append('email', document.getElementById('email').value)
+        form.append('photo', document.getElementById('photo').files[0])
 
-        await updateData({ name, email});
+        await updateData(form);
 
         saveBtn.textContent = 'Save settings';
         saveBtn.disabled = false
