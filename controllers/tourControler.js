@@ -1,3 +1,6 @@
+const multer = require('multer');
+const sharp = require('sharp');
+
 const Tour = require('./../models/tourModel');
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/AppError");
@@ -8,6 +11,77 @@ const {
     getOne,
     deleteOne
 } = require("./handlerFactory");
+
+// Save the file to the memory as buffer
+const multerStorage = multer.memoryStorage();
+
+// Filters out all not 'image' type file uploads
+const multerFilter = (req, file, cb) => {
+    if (file.mimetype.startsWith('image')) {
+        cb(null, true);
+    } else {
+        cb(
+            new AppError('Not an image, please upload only images!', 400),
+            false
+        )
+    }
+};
+
+// Initialize the 'upload' object
+const upload = multer({
+    storage: multerStorage,
+    fileFilter: multerFilter
+});
+
+// Define the field types and max count
+exports.uploadTourImages = upload.fields([
+    { name: 'imageCover', maxCount: 1 },
+    { name: 'images', maxCount: 3 }
+]);
+
+exports.resizeTourImages = catchAsync(async (req, res, next) => {
+    // Move on if no uploads
+    if (!req.files.imageCover || !req.files.images) return next();
+
+    // --- Image processing ---
+
+    //  1) Cover image
+
+    // Set file name as imageCover property to req.body so it gets picked up by the tour updating function
+    //   Format: tour-{tourId}-{timestamp}-cover => tour-j7defs334434df-123243434-cover.jpeg
+    req.body.imageCover = `tour-${req.params.id}-${Date.now()}-cover.jpeg`;
+
+    // Resize, format and save uploaded image
+    await sharp(req.files.imageCover[0].buffer)
+        .resize(2000, 1333)
+        .toFormat('jpeg', { quality: 90 })
+        .toFile(`public/img/tours/${req.body.imageCover}`);
+
+
+    //  2) Images
+    req.body.images = [];
+
+    // Loop through the images array and since on each iteration a new promise is returned
+    // .map is used instead of .forEach to collect them into a new Promise array and await them all together
+    await Promise.all(
+        req.files.images.map(async (file, i) => {
+            // Set file name
+            //   Format: tour-{tourId}-{timestamp}-{number} => tour-j7defs334434df-123243434-1.jpeg
+            const filename = `tour-${req.params.id}-${Date.now()}-${i + 1}.jpeg`;
+
+            // Resize, format and save uploaded image
+            await sharp(file.buffer)
+                .resize(2000, 1333)
+                .toFormat('jpeg', { quality: 90 })
+                .toFile(`public/img/tours/${filename}`);
+
+            // Add each image filename to the req.body.images array so they get picked up by the tour updating function
+            req.body.images.push(filename);
+        })
+    );
+
+    next();
+});
 
 exports.getAllTours = getAll(Tour);
 
