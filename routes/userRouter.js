@@ -21,7 +21,7 @@ router.use(authCtrl.protect);
 
 // Current user actions endpoints - access by logged users
 router.get('/me', userCtrl.getMe, userCtrl.getUser);
-router.patch( '/updateMe', userCtrl.uploadUserPhoto, userCtrl.updateMe);
+router.patch( '/updateMe', userCtrl.uploadUserPhoto, userCtrl.resizeUserPhoto, userCtrl.updateMe);
 router.delete( '/deleteMe', userCtrl.deleteMe);
 
 // Use middleware here to restrict the access by role to all of the routes below

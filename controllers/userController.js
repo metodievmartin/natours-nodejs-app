@@ -1,11 +1,13 @@
 const multer = require('multer');
+const sharp = require('sharp');
+
 const User = require('./../models/userModel');
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require("../utils/AppError");
 const { getAll, updateOne, getOne, deleteOne } = require("./handlerFactory");
 
 // Photo upload storage settings
-const multerStorage = multer.diskStorage({
+/*const multerStorage = multer.diskStorage({
    destination: (req, file, cb) => {
        // Set file destination folder
        cb(null, 'public/img/users');
@@ -16,7 +18,10 @@ const multerStorage = multer.diskStorage({
        const ext = file.mimetype.split('/')[1];
        cb(null, `user-${req.user.id}-${Date.now()}.${ext}`);
     }
-});
+});*/
+
+// Save the file to the memory as buffer
+const multerStorage = multer.memoryStorage();
 
 // Filters out all not 'image' type file uploads
 const multerFilter = (req, file, cb) => {
@@ -37,6 +42,23 @@ const upload = multer({
 });
 
 exports.uploadUserPhoto = upload.single('photo');
+
+exports.resizeUserPhoto = (req, res, next) => {
+    // Move on if no upload
+    if (!req.file) return next();
+
+    // Set file name to req.file.filename for it's needed in updateMe()
+    //   Format: user-{user._id}-{timestamp} => user-j7dhfsdj334434df-123243434.jpeg
+    req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
+
+    // Image processing - resize, format and save uploaded image
+    sharp(req.file.buffer)
+        .resize(500, 500)
+        .toFormat('jpeg', { quality: 90 })
+        .toFile(`public/img/users/${req.file.filename}`);
+
+    next();
+};
 
 exports.getAllUsers = getAll(User);
 
