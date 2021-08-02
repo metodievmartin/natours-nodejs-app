@@ -16,7 +16,7 @@ const handleValidationErrorDB = err => {
 
 const handleDuplicateFieldsDB = err => {
     const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0];
-    console.log(value);
+
     const message = `Duplicate field value: ${value}. Please use another value!`;
 
     return new AppError(message, 400);
@@ -58,7 +58,7 @@ const sendErrorProd = (err, req, res) => {
         }
         // A2) Programming or other unknown error: don't leak error details
         //      1) Log error
-        console.error('ERROR:', err);
+        console.error('ERROR: ', err);
 
         //      2) Send generic message
         return res.status(500).json({
@@ -77,7 +77,7 @@ const sendErrorProd = (err, req, res) => {
     }
     //  B2) Programming or other unknown error: don't leak error details
     //      1) Log error
-    console.error('ERROR:', err);
+    console.error('ERROR: ', err);
 
     //      2) Send generic message
     return res.status(500).render('error', {

@@ -25,7 +25,13 @@ const bookingSchema = new mongoose.Schema({
     }
 });
 
+// -- QUERY MIDDLEWARE --
+// Using regex to match all the methods starting with 'find' (findOne(), findByID(), etc.)
+// otherwise it will run only for the .find() method
+
+// Populate each booking with the user and the tour name
 bookingSchema.pre(/^find/, function(next) {
+    //'this' refers to the query object
     this.populate('user').populate({
         path: 'tour',
         select: 'name'
